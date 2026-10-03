@@ -26,5 +26,5 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.6.1'
+    // 순수 안드로이드 SDK 내장 클래스만 사용하여 라이브러리 충돌을 원천 차단합니다.
 }
