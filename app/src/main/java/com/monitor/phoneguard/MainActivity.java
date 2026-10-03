@@ -1,4 +1,6 @@
-﻿package com.monitor.phoneguard;
+package com.monitor.phoneguard;
+
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -8,9 +10,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
-import androidx.appcompat.app.AppCompatActivity;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
     private EditText etDeviceNumber;
     private TextView tvStatus;
     private SharedPreferences prefs;
@@ -28,13 +29,13 @@ public class MainActivity extends AppCompatActivity {
         String savedNum = prefs.getString("device_num", "");
         if (!savedNum.isEmpty()) {
             etDeviceNumber.setText(savedNum);
-            tvStatus.setText("?꾩옱 媛먯떆 媛??以? " + savedNum + "踰???);
+            tvStatus.setText("현재 감시 가동 중: " + savedNum + "번 폰");
         }
 
         btnStart.setOnClickListener(v -> {
             String num = etDeviceNumber.getText().toString().trim();
             if (num.isEmpty()) {
-                Toast.makeText(this, "湲곌린 踰덊샇瑜??낅젰?섏꽭??", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "기기 번호를 입력하세요!", Toast.LENGTH_SHORT).show();
                 return;
             }
             prefs.edit().putString("device_num", num).apply();
@@ -46,8 +47,8 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 startService(serviceIntent);
             }
-            tvStatus.setText("?곹깭: " + num + "踰??ㅼ떆媛?愿???묐룞 以?);
-            Toast.makeText(this, num + "踰?愿???쒕퉬???쒖옉??, Toast.LENGTH_SHORT).show();
+            tvStatus.setText("상태: " + num + "번 실시간 관제 작동 중");
+            Toast.makeText(this, num + "번 관제 서비스 시작됨", Toast.LENGTH_SHORT).show();
         });
     }
 }
