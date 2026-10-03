@@ -1,39 +1,41 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="24dp"
     android:gravity="center">
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="?곕낫??52? ?듯빀 愿????
+        android:text="폰보드 52대 통합 관제 앱"
         android:textSize="22sp"
         android:textStyle="bold"
         android:layout_marginBottom="24dp" />
+
     <EditText
         android:id="@+id/etDeviceNumber"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="湲곌린 踰덊샇 ?낅젰 (?? 01, 15)"
+        android:hint="기기 번호 입력 (예: 01, 15)"
         android:inputType="number"
-        android:textAlignment="center"
+        android:gravity="center"
         android:textSize="22sp"
         android:layout_marginBottom="20dp" />
+
     <Button
         android:id="@+id/btnStart"
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:text="?ㅼ떆媛?媛먯떆 ?쒕퉬??媛??
-        android:textSize="18sp"
-        android:backgroundTint="#293541"
-        android:textColor="#FFFFFF" />
+        android:text="실시간 감시 서비스 가동"
+        android:textSize="18sp" />
+
     <TextView
         android:id="@+id/tvStatus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:text="?곹깭: ?湲?以?
+        android:text="상태: 대기 중"
         android:textSize="15sp" />
 </LinearLayout>
