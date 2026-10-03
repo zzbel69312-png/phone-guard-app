@@ -2,36 +2,82 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>스마트폰 실시간 관제소</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background-color: #0b0f19; color: #ffffff; padding: 15px; }
-    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #1e293b; padding-bottom: 12px; flex-wrap: wrap; gap: 10px; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 2px solid #1e293b; padding-bottom: 10px; flex-wrap: wrap; gap: 8px; }
     h1 { font-size: 1.2rem; font-weight: bold; }
     .controls { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; background: #1e293b; padding: 5px 10px; border-radius: 8px; }
     .controls input { width: 55px; background: #0b0f19; border: 1px solid #475569; color: #fff; padding: 3px 6px; border-radius: 4px; text-align: center; font-size: 0.9rem; font-weight: bold; }
-    .status-summary { display: flex; gap: 8px; font-size: 0.8rem; flex-wrap: wrap; }
-    .status-badge { padding: 5px 10px; border-radius: 8px; font-weight: bold; }
+    .status-summary { display: flex; gap: 6px; font-size: 0.8rem; flex-wrap: wrap; }
+    .status-badge { padding: 4px 8px; border-radius: 6px; font-weight: bold; }
     .badge-online { background: #15803d; color: #ffffff; }
     .badge-offline { background: #b91c1c; color: #ffffff; }
     .badge-unregistered { background: #475569; color: #cbd5e1; }
-    .unreg-alert-box { background: #1e293b; border-left: 4px solid #94a3b8; padding: 8px 12px; margin-bottom: 15px; border-radius: 4px; font-size: 0.8rem; line-height: 1.4; color: #cbd5e1; word-break: break-all; }
+    
+    .guide-box { background: #1e293b; border-radius: 6px; padding: 8px 12px; margin-bottom: 10px; font-size: 0.78rem; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .unreg-alert-box { background: #1e293b; border-left: 4px solid #94a3b8; padding: 8px 12px; margin-bottom: 12px; border-radius: 4px; font-size: 0.8rem; line-height: 1.4; color: #cbd5e1; word-break: break-all; }
     .unreg-list-text { color: #f87171; font-weight: bold; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 10px; }
-    .card { border-radius: 10px; padding: 10px 6px; text-align: center; transition: all 0.3s ease; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); border: 2px solid transparent; }
+    
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 8px; }
+    .card { border-radius: 10px; padding: 10px 4px; text-align: center; transition: all 0.2s ease; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); border: 2px solid transparent; position: relative; }
     .card.online { background: linear-gradient(145deg, #15803d, #166534); border-color: #22c55e; color: #ffffff; }
     .card.offline { background: linear-gradient(145deg, #b91c1c, #991b1b); border-color: #ef4444; color: #fee2e2; }
-    .card.unregistered { background: #1e293b; border-color: #475569; border-style: dashed; opacity: 0.5; }
-    .card-title { font-size: 1.1rem; font-weight: 900; margin-bottom: 6px; }
+    .card.unregistered { background: #1e293b; border-color: #475569; border-style: dashed; opacity: 0.45; }
+    
+    .card-title { font-size: 1.15rem; font-weight: 900; margin-bottom: 6px; }
     .card.online .card-title { color: #f0fdf4; border-bottom: 1px solid rgba(255, 255, 255, 0.2); padding-bottom: 3px; }
     .card.offline .card-title { color: #fef2f2; border-bottom: 1px solid rgba(255, 255, 255, 0.2); padding-bottom: 3px; }
     .card.unregistered .card-title { color: #94a3b8; border-bottom: 1px dashed rgba(255, 255, 255, 0.1); padding-bottom: 3px; }
-    .stat { font-size: 0.75rem; margin-bottom: 3px; display: flex; justify-content: space-between; font-weight: 600; }
-    .stat-val { font-weight: 800; }
-    .stat-val.warn { color: #fef08a; }
-    .uptime { font-size: 0.68rem; opacity: 0.85; margin-top: 6px; }
+    
+    .stat { font-size: 0.76rem; margin-bottom: 3px; display: flex; justify-content: space-between; font-weight: 600; padding: 0 4px; }
+    .stat-val { font-weight: 600; }
+
+    /* 주황색 + 밑줄 + 두껍게 */
+    .stat-val.text-orange {
+      color: #ff9800 !important;
+      text-decoration: underline;
+      font-weight: 900;
+      text-shadow: 0 0 2px rgba(0,0,0,0.8);
+    }
+
+    /* 빨간색 + 밑줄 + 두껍게 */
+    .stat-val.text-red {
+      color: #ff3b30 !important;
+      text-decoration: underline;
+      font-weight: 900;
+      text-shadow: 0 0 3px rgba(0,0,0,0.9);
+    }
+
+    .uptime { font-size: 0.68rem; opacity: 0.85; margin-top: 5px; }
     .status-msg { font-size: 0.85rem; font-weight: bold; margin: 12px 0; }
+
+    /* X 삭제 버튼: PC 마우스 호버 및 모바일 터치 대응 */
+    .btn-delete {
+      display: block;
+      position: absolute;
+      top: 3px;
+      right: 3px;
+      width: 18px;
+      height: 18px;
+      background: rgba(0, 0, 0, 0.5);
+      color: #fca5a5;
+      border: 1px solid #ef4444;
+      border-radius: 50%;
+      font-size: 11px;
+      font-weight: 900;
+      line-height: 16px;
+      cursor: pointer;
+      text-align: center;
+      z-index: 20;
+    }
+    .btn-delete:hover, .btn-delete:active {
+      background: #dc2626;
+      color: #ffffff;
+      transform: scale(1.15);
+    }
   </style>
 </head>
 <body>
@@ -49,11 +95,18 @@
     </div>
   </header>
 
+  <div class="guide-box">
+    <div>⚠️ <strong>주의(주황):</strong> 36~38.9℃ / 70% 이하</div>
+    <div>🚨 <strong>위험(빨강):</strong> 39℃ 이상 / 50% 이하</div>
+    <div style="color: #cbd5e1;">(우측 상단 ✕ 누르면 해당 기기 데이터 삭제)</div>
+  </div>
+
   <div class="unreg-alert-box" id="unreg-box">확인 중...</div>
   <div class="grid" id="grid"></div>
 
   <script>
-    const FIREBASE_URL = "https://phonewebmonitor-7afcb-default-rtdb.europe-west1.firebasedatabase.app/devices.json";
+    const RTDB_BASE = "https://phonewebmonitor-7afcb-default-rtdb.europe-west1.firebasedatabase.app";
+    const FIREBASE_URL = `${RTDB_BASE}/devices.json`;
     const grid = document.getElementById("grid");
     const countOnline = document.getElementById("count-online");
     const countOffline = document.getElementById("count-offline");
@@ -63,11 +116,28 @@
 
     targetCountInput.addEventListener("input", fetchStatus);
 
+    // [기기 삭제 처리 함수: 2자리/1자리 키 모두 정리]
+    async function deleteDevice(numFormatted, rawKeys, e) {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
+      if (!confirm(`[#${numFormatted}] 기기 데이터를 삭제하시겠습니까?`)) return;
+
+      try {
+        // 관련된 모든 키('3', '03' 등)를 동시 삭제
+        const promises = rawKeys.map(k => 
+          fetch(`${RTDB_BASE}/devices/${k}.json`, { method: "DELETE" })
+        );
+        await Promise.all(promises);
+        fetchStatus();
+      } catch (err) {
+        alert("삭제 실패: " + err);
+      }
+    }
+
     async function fetchStatus() {
       try {
-        const res = await fetch(FIREBASE_URL);
-        const data = await res.json() || {};
-        render(data);
+        const res = await fetch(FIREBASE_URL + "?t=" + Date.now()); // 캐시 방지 파라미터
+        const rawData = await res.json() || {};
+        render(rawData);
       } catch (e) {
         console.error("데이터 수신 오류:", e);
       }
@@ -75,14 +145,32 @@
 
     function formatNumber(n) { return n < 10 ? "0" + n : "" + n; }
 
-    function render(data) {
+    function render(rawData) {
       const targetCount = parseInt(targetCountInput.value, 10) || 52;
-      const existingKeys = new Set(Object.keys(data));
-      const allNumbersSet = new Set();
-      for (let i = 1; i <= targetCount; i++) allNumbersSet.add(formatNumber(i));
-      existingKeys.forEach(k => allNumbersSet.add(k));
+      
+      // [완벽 중복 방지 로직]: '3'이든 '03'이든 정수 변환 후 무조건 하나의 '#03'으로 합침
+      const mergedData = {};
+      const relatedKeysMap = {}; // '03' -> ['3', '03']
 
-      const sortedKeys = Array.from(allNumbersSet).sort((a, b) => {
+      Object.keys(rawData).forEach(k => {
+        const parsed = parseInt(k, 10);
+        const normKey = !isNaN(parsed) ? formatNumber(parsed) : k;
+
+        if (!relatedKeysMap[normKey]) relatedKeysMap[normKey] = [];
+        relatedKeysMap[normKey].push(k);
+
+        const currentItem = rawData[k];
+        if (!mergedData[normKey] || (currentItem.updatedAt > (mergedData[normKey].updatedAt || 0))) {
+          mergedData[normKey] = currentItem;
+        }
+      });
+
+      // 1부터 목표 관리 대수까지 생성
+      const finalKeysSet = new Set();
+      for (let i = 1; i <= targetCount; i++) finalKeysSet.add(formatNumber(i));
+      Object.keys(mergedData).forEach(k => finalKeysSet.add(k));
+
+      const sortedKeys = Array.from(finalKeysSet).sort((a, b) => {
         const numA = parseInt(a, 10), numB = parseInt(b, 10);
         if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
         return a.localeCompare(b);
@@ -93,8 +181,7 @@
       let onlineCount = 0, offlineCount = 0, unregisteredList = [];
 
       sortedKeys.forEach(num => {
-        const altNum = "" + parseInt(num, 10);
-        const dev = data[num] || data[altNum];
+        const dev = mergedData[num];
         const card = document.createElement("div");
         card.className = "card";
 
@@ -103,19 +190,39 @@
           card.classList.add("unregistered");
           card.innerHTML = `<div class="card-title">#${num}</div><div class="status-msg" style="color:#94a3b8;">미등록</div><div class="uptime">-</div>`;
         } else {
+          // 데이터가 있는 타일에는 우측 상단 X 삭제 버튼 부착
+          const delBtn = document.createElement("div");
+          delBtn.className = "btn-delete";
+          delBtn.innerText = "✕";
+          delBtn.title = "삭제";
+          const rawKeys = relatedKeysMap[num] || [num];
+          delBtn.onclick = (e) => deleteDevice(num, rawKeys, e);
+          card.appendChild(delBtn);
+
           const isOffline = !dev.updatedAt || (now - dev.updatedAt > 60000);
           if (isOffline) {
             offlineCount++;
             card.classList.add("offline");
-            card.innerHTML = `<div class="card-title">#${num}</div><div class="status-msg">끊김</div><div class="uptime">${dev.uptime || '-'}</div>`;
+            card.innerHTML += `<div class="card-title">#${num}</div><div class="status-msg">끊김</div><div class="uptime">${dev.uptime || '-'}</div>`;
           } else {
             onlineCount++;
             card.classList.add("online");
-            card.innerHTML = `
+
+            let tempClass = "";
+            if (dev.temp >= 39.0) tempClass = "text-red";
+            else if (dev.temp >= 36.0) tempClass = "text-orange";
+
+            let battClass = "";
+            if (dev.batt <= 50) battClass = "text-red";
+            else if (dev.batt <= 70) battClass = "text-orange";
+
+            const usbClass = !dev.plugged ? "text-red" : "";
+
+            card.innerHTML += `
               <div class="card-title">#${num}</div>
-              <div class="stat"><span>온도</span><span class="stat-val ${dev.temp >= 39 ? 'warn' : ''}">${dev.temp}℃</span></div>
-              <div class="stat"><span>배터리</span><span class="stat-val ${dev.batt < 50 ? 'warn' : ''}">${dev.batt}%</span></div>
-              <div class="stat"><span>충전</span><span class="stat-val ${!dev.plugged ? 'warn' : ''}">${dev.plugged ? 'ON' : 'OFF'}</span></div>
+              <div class="stat"><span>온도</span><span class="stat-val ${tempClass}">${dev.temp}℃</span></div>
+              <div class="stat"><span>배터리</span><span class="stat-val ${battClass}">${dev.batt}%</span></div>
+              <div class="stat"><span>충전</span><span class="stat-val ${usbClass}">${dev.plugged ? 'ON' : 'OFF'}</span></div>
               <div class="uptime">${dev.uptime || '-'}</div>
             `;
           }
