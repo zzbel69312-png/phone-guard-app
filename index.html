@@ -11,20 +11,28 @@
     h1 { font-size: 1.2rem; font-weight: bold; }
     .controls { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; background: #1e293b; padding: 5px 10px; border-radius: 8px; }
     .controls input { width: 55px; background: #0b0f19; border: 1px solid #475569; color: #fff; padding: 3px 6px; border-radius: 4px; text-align: center; font-size: 0.9rem; font-weight: bold; }
+    
     .status-summary { display: flex; gap: 6px; font-size: 0.8rem; flex-wrap: wrap; }
     .status-badge { padding: 4px 8px; border-radius: 6px; font-weight: bold; }
     .badge-online { background: #15803d; color: #ffffff; }
-    .badge-offline { background: #b91c1c; color: #ffffff; }
-    .badge-unregistered { background: #475569; color: #cbd5e1; }
-    
-    .guide-box { background: #1e293b; border-radius: 6px; padding: 8px 12px; margin-bottom: 10px; font-size: 0.78rem; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-    .unreg-alert-box { background: #1e293b; border-left: 4px solid #94a3b8; padding: 8px 12px; margin-bottom: 12px; border-radius: 4px; font-size: 0.8rem; line-height: 1.4; color: #cbd5e1; word-break: break-all; }
-    .unreg-list-text { color: #f87171; font-weight: bold; }
-    
+    .badge-warn { background: #d97706; color: #ffffff; }
+    .badge-danger { background: #b91c1c; color: #ffffff; }
+    .badge-offline { background: #475569; color: #cbd5e1; }
+
+    /* 상단 이상 기기 번호 요약 알림창 */
+    .alert-panel { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; font-size: 0.82rem; }
+    .alert-row { padding: 8px 12px; border-radius: 6px; line-height: 1.4; display: flex; align-items: flex-start; gap: 8px; word-break: break-all; }
+    .alert-danger { background: rgba(185, 28, 28, 0.25); border: 1px solid #ef4444; color: #fca5a5; }
+    .alert-warn { background: rgba(217, 119, 6, 0.25); border: 1px solid #f59e0b; color: #fde68a; }
+    .alert-unreg { background: #1e293b; border-left: 4px solid #64748b; color: #cbd5e1; }
+    .alert-nums { font-weight: 800; font-size: 0.9rem; }
+    .text-danger-bold { color: #ff4d4f; }
+    .text-warn-bold { color: #fbbf24; }
+
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 8px; }
     .card { border-radius: 10px; padding: 10px 4px; text-align: center; transition: all 0.2s ease; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); border: 2px solid transparent; position: relative; }
     .card.online { background: linear-gradient(145deg, #15803d, #166534); border-color: #22c55e; color: #ffffff; }
-    .card.offline { background: linear-gradient(145deg, #b91c1c, #991b1b); border-color: #ef4444; color: #fee2e2; }
+    .card.offline { background: linear-gradient(145deg, #7f1d1d, #450a0a); border-color: #ef4444; color: #fee2e2; }
     .card.unregistered { background: #1e293b; border-color: #475569; border-style: dashed; opacity: 0.45; }
     
     .card-title { font-size: 1.15rem; font-weight: 900; margin-bottom: 6px; }
@@ -34,27 +42,12 @@
     
     .stat { font-size: 0.76rem; margin-bottom: 3px; display: flex; justify-content: space-between; font-weight: 600; padding: 0 4px; }
     .stat-val { font-weight: 600; }
-
-    /* 주황색 + 밑줄 + 두껍게 */
-    .stat-val.text-orange {
-      color: #ff9800 !important;
-      text-decoration: underline;
-      font-weight: 900;
-      text-shadow: 0 0 2px rgba(0,0,0,0.8);
-    }
-
-    /* 빨간색 + 밑줄 + 두껍게 */
-    .stat-val.text-red {
-      color: #ff3b30 !important;
-      text-decoration: underline;
-      font-weight: 900;
-      text-shadow: 0 0 3px rgba(0,0,0,0.9);
-    }
+    .stat-val.text-orange { color: #ff9800 !important; text-decoration: underline; font-weight: 900; text-shadow: 0 0 2px rgba(0,0,0,0.8); }
+    .stat-val.text-red { color: #ff3b30 !important; text-decoration: underline; font-weight: 900; text-shadow: 0 0 3px rgba(0,0,0,0.9); }
 
     .uptime { font-size: 0.68rem; opacity: 0.85; margin-top: 5px; }
     .status-msg { font-size: 0.85rem; font-weight: bold; margin: 12px 0; }
 
-    /* X 삭제 버튼: PC 마우스 호버 및 모바일 터치 대응 */
     .btn-delete {
       display: block;
       position: absolute;
@@ -73,11 +66,7 @@
       text-align: center;
       z-index: 20;
     }
-    .btn-delete:hover, .btn-delete:active {
-      background: #dc2626;
-      color: #ffffff;
-      transform: scale(1.15);
-    }
+    .btn-delete:hover, .btn-delete:active { background: #dc2626; color: #ffffff; transform: scale(1.15); }
   </style>
 </head>
 <body>
@@ -90,42 +79,53 @@
     </div>
     <div class="status-summary">
       <span class="status-badge badge-online" id="count-online">정상: 0</span>
+      <span class="status-badge badge-warn" id="count-warn">주의: 0</span>
+      <span class="status-badge badge-danger" id="count-danger">위험: 0</span>
       <span class="status-badge badge-offline" id="count-offline">끊김: 0</span>
-      <span class="status-badge badge-unregistered" id="count-unreg">미등록: 0</span>
     </div>
   </header>
 
-  <div class="guide-box">
-    <div>⚠️ <strong>주의(주황):</strong> 36~38.9℃ / 70% 이하</div>
-    <div>🚨 <strong>위험(빨강):</strong> 39℃ 이상 / 50% 이하</div>
-    <div style="color: #cbd5e1;">(우측 상단 ✕ 누르면 해당 기기 데이터 삭제)</div>
+  <!-- 상단 상태별 번호 목록 요약 영역 -->
+  <div class="alert-panel">
+    <div class="alert-row alert-danger" id="box-danger">
+      <span>🚨</span>
+      <div><strong>위험 기기 (온도≥39℃ / 배터리≤50%):</strong> <span class="alert-nums text-danger-bold" id="list-danger">없음</span></div>
+    </div>
+    <div class="alert-row alert-warn" id="box-warn">
+      <span>⚠️</span>
+      <div><strong>주의 기기 (온도 36~38.9℃ / 배터리 51~70% / 충전 분리):</strong> <span class="alert-nums text-warn-bold" id="list-warn">없음</span></div>
+    </div>
+    <div class="alert-row alert-unreg" id="box-unreg">
+      <span>📌</span>
+      <div><strong>미등록 기기:</strong> <span class="alert-nums" id="list-unreg">확인 중...</span></div>
+    </div>
   </div>
 
-  <div class="unreg-alert-box" id="unreg-box">확인 중...</div>
   <div class="grid" id="grid"></div>
 
   <script>
     const RTDB_BASE = "https://phonewebmonitor-7afcb-default-rtdb.europe-west1.firebasedatabase.app";
     const FIREBASE_URL = `${RTDB_BASE}/devices.json`;
     const grid = document.getElementById("grid");
+    
     const countOnline = document.getElementById("count-online");
+    const countWarn = document.getElementById("count-warn");
+    const countDanger = document.getElementById("count-danger");
     const countOffline = document.getElementById("count-offline");
-    const countUnreg = document.getElementById("count-unreg");
-    const unregBox = document.getElementById("unreg-box");
+
+    const listDanger = document.getElementById("list-danger");
+    const listWarn = document.getElementById("list-warn");
+    const listUnreg = document.getElementById("list-unreg");
     const targetCountInput = document.getElementById("targetCount");
 
     targetCountInput.addEventListener("input", fetchStatus);
 
-    // [기기 삭제 처리 함수: 2자리/1자리 키 모두 정리]
     async function deleteDevice(numFormatted, rawKeys, e) {
       if (e) { e.preventDefault(); e.stopPropagation(); }
       if (!confirm(`[#${numFormatted}] 기기 데이터를 삭제하시겠습니까?`)) return;
 
       try {
-        // 관련된 모든 키('3', '03' 등)를 동시 삭제
-        const promises = rawKeys.map(k => 
-          fetch(`${RTDB_BASE}/devices/${k}.json`, { method: "DELETE" })
-        );
+        const promises = rawKeys.map(k => fetch(`${RTDB_BASE}/devices/${k}.json`, { method: "DELETE" }));
         await Promise.all(promises);
         fetchStatus();
       } catch (err) {
@@ -135,7 +135,7 @@
 
     async function fetchStatus() {
       try {
-        const res = await fetch(FIREBASE_URL + "?t=" + Date.now()); // 캐시 방지 파라미터
+        const res = await fetch(FIREBASE_URL + "?t=" + Date.now());
         const rawData = await res.json() || {};
         render(rawData);
       } catch (e) {
@@ -148,9 +148,8 @@
     function render(rawData) {
       const targetCount = parseInt(targetCountInput.value, 10) || 52;
       
-      // [완벽 중복 방지 로직]: '3'이든 '03'이든 정수 변환 후 무조건 하나의 '#03'으로 합침
       const mergedData = {};
-      const relatedKeysMap = {}; // '03' -> ['3', '03']
+      const relatedKeysMap = {};
 
       Object.keys(rawData).forEach(k => {
         const parsed = parseInt(k, 10);
@@ -165,7 +164,6 @@
         }
       });
 
-      // 1부터 목표 관리 대수까지 생성
       const finalKeysSet = new Set();
       for (let i = 1; i <= targetCount; i++) finalKeysSet.add(formatNumber(i));
       Object.keys(mergedData).forEach(k => finalKeysSet.add(k));
@@ -178,7 +176,12 @@
 
       grid.innerHTML = "";
       const now = Date.now();
-      let onlineCount = 0, offlineCount = 0, unregisteredList = [];
+      
+      let onlineCount = 0;
+      let offlineCount = 0;
+      let dangerList = [];
+      let warnList = [];
+      let unregList = [];
 
       sortedKeys.forEach(num => {
         const dev = mergedData[num];
@@ -186,11 +189,10 @@
         card.className = "card";
 
         if (!dev) {
-          unregisteredList.push(num);
+          unregList.push(num);
           card.classList.add("unregistered");
           card.innerHTML = `<div class="card-title">#${num}</div><div class="status-msg" style="color:#94a3b8;">미등록</div><div class="uptime">-</div>`;
         } else {
-          // 데이터가 있는 타일에는 우측 상단 X 삭제 버튼 부착
           const delBtn = document.createElement("div");
           delBtn.className = "btn-delete";
           delBtn.innerText = "✕";
@@ -208,15 +210,22 @@
             onlineCount++;
             card.classList.add("online");
 
-            let tempClass = "";
-            if (dev.temp >= 39.0) tempClass = "text-red";
-            else if (dev.temp >= 36.0) tempClass = "text-orange";
+            const isTempDanger = dev.temp >= 39.0;
+            const isBattDanger = dev.batt <= 50;
 
-            let battClass = "";
-            if (dev.batt <= 50) battClass = "text-red";
-            else if (dev.batt <= 70) battClass = "text-orange";
+            const isTempWarn = !isTempDanger && (dev.temp >= 36.0);
+            const isBattWarn = !isBattDanger && (dev.batt <= 70);
+            const isUsbOff = !dev.plugged;
 
-            const usbClass = !dev.plugged ? "text-red" : "";
+            if (isTempDanger || isBattDanger) {
+              dangerList.push(num);
+            } else if (isTempWarn || isBattWarn || isUsbOff) {
+              warnList.push(num);
+            }
+
+            const tempClass = isTempDanger ? "text-red" : (isTempWarn ? "text-orange" : "");
+            const battClass = isBattDanger ? "text-red" : (isBattWarn ? "text-orange" : "");
+            const usbClass = isUsbOff ? "text-red" : "";
 
             card.innerHTML += `
               <div class="card-title">#${num}</div>
@@ -230,15 +239,16 @@
         grid.appendChild(card);
       });
 
-      countOnline.innerText = `정상: ${onlineCount}`;
+      // 배지 카운트 반영
+      countOnline.innerText = `정상: ${onlineCount - dangerList.length - warnList.length}`;
+      countWarn.innerText = `주의: ${warnList.length}`;
+      countDanger.innerText = `위험: ${dangerList.length}`;
       countOffline.innerText = `끊김: ${offlineCount}`;
-      countUnreg.innerText = `미등록: ${unregisteredList.length}`;
 
-      if (unregisteredList.length > 0) {
-        unregBox.innerHTML = `📌 <strong>미등록:</strong> <span class="unreg-list-text">${unregisteredList.map(n => '#' + n).join(', ')}</span>`;
-      } else {
-        unregBox.innerHTML = `✅ <strong>전체 기기 등록 완료</strong>`;
-      }
+      // 상단 텍스트 목록 즉시 갱신
+      listDanger.innerText = dangerList.length > 0 ? dangerList.map(n => '#' + n).join(', ') : '없음 (정상)';
+      listWarn.innerText = warnList.length > 0 ? warnList.map(n => '#' + n).join(', ') : '없음 (정상)';
+      listUnreg.innerText = unregList.length > 0 ? unregList.map(n => '#' + n).join(', ') : '전체 등록 완료';
     }
 
     fetchStatus();
