@@ -1,11 +1,15 @@
 package com.monitor.phoneguard;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.PowerManager;
+import android.provider.Settings;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -38,7 +42,13 @@ public class MainActivity extends Activity {
                 Toast.makeText(this, "기기 번호를 입력하세요!", Toast.LENGTH_SHORT).show();
                 return;
             }
+
             prefs.edit().putString("device_num", num).apply();
+
+            // 백그라운드 절전 모드 자동 해제 팝업 띄우기
+            checkBatteryOptimization();
+
+            // 상시 감시 서비스 시작
             Intent serviceIntent = new Intent(this, MonitorService.class);
             serviceIntent.putExtra("device_num", num);
 
@@ -47,8 +57,26 @@ public class MainActivity extends Activity {
             } else {
                 startService(serviceIntent);
             }
+
             tvStatus.setText("상태: " + num + "번 실시간 관제 작동 중");
-            Toast.makeText(this, num + "번 관제 서비스 시작됨", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, num + "번 관제 가동 시작 (절전 제외 완료)", Toast.LENGTH_SHORT).show();
         });
+    }
+
+    @SuppressLint("BatteryLife")
+    private void checkBatteryOptimization() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            if (pm != null && !pm.isIgnoringBatteryOptimizations(getPackageName())) {
+                try {
+                    Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                    intent.setData(Uri.parse("package:" + getPackageName()));
+                    startActivity(intent);
+                } catch (Exception e) {
+                    Intent intent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+                    startActivity(intent);
+                }
+            }
+        }
     }
 }
