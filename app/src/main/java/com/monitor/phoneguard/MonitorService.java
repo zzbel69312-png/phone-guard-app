@@ -49,7 +49,7 @@ public class MonitorService extends Service {
                 long now = System.currentTimeMillis();
                 if (now - lastDisconnectAlertTime > 180000) {
                     lastDisconnectAlertTime = now;
-                    sendDiscordAlert("\uD83D\uDD0C **[\uD3F0\uBCF4\uB4DC USB \uBD84\uB9AC/\uC778\uC2DD \uD574\uC81C \uAC10\uC9C0]**\n\u2022 \uAE30\uAE30: **" + deviceNum + "\uBC88 \uD3F0**\n\u2022 \uC0C1\uD0DC: \uC804\uC6D0 \uACF5\uAE09 \uBC0F USB \uC5F0\uACB0 \uC911\uB2E8!");
+                    sendDiscordAlert("[ALERT] USB Disconnected! Device: #" + deviceNum);
                 }
             }
             isUsbPlugged = currentlyPlugged;
@@ -76,18 +76,18 @@ public class MonitorService extends Service {
             long uptimeSeconds = SystemClock.elapsedRealtime() / 1000;
             int hours = (int) (uptimeSeconds / 3600);
             int mins = (int) ((uptimeSeconds % 3600) / 60);
-            String uptimeStr = hours + "\uC2DC\uAC04 " + mins + "\uBD84";
+            String uptimeStr = hours + "h " + mins + "m";
 
             sendDataToFirebase(deviceNum, currentTemp, currentBatt, uptimeStr, isUsbPlugged);
 
             long now = System.currentTimeMillis();
             if (currentTemp >= 39.0f && (now - lastDangerAlertTime > 300000)) {
                 lastDangerAlertTime = now;
-                sendDiscordAlert("\uD83D\uDEA8 **[\uC2A4\uB9C8\uD2B8\uD3F0 \uACE0\uC628 \uC704\uD5D8] " + deviceNum + "\uBC88 \uAE30\uAE30**\n\u2022 \uD604\uC7AC \uC628\uB3C4: **" + currentTemp + "\u2103**\n\u2022 \uBC30\uD130\uB9AC: **" + currentBatt + "%**\n\u2022 \uAC00\uB3D9\uC2DC\uAC04: **" + uptimeStr + "**");
+                sendDiscordAlert("[DANGER] High Temp (" + currentTemp + "C)! Device: #" + deviceNum + " (Batt: " + currentBatt + "%)");
             }
             if (currentBatt < 50 && (now - lastBattAlertTime > 600000)) {
                 lastBattAlertTime = now;
-                sendDiscordAlert("\uD83E\uDEAB **[\uBC30\uD130\uB9AC \uC800\uD558 \uACBD\uACE0 (50% \uBBF8\uB man)] " + deviceNum + "\uBC88 \uAE30\uAE30**\n\u2022 \uC794\uC5EC \uBC30\uD130\uB9AC: **" + currentBatt + "%**\n\u2022 \uD604\uC7AC \uC628\uB3C4: " + currentTemp + "\u2103");
+                sendDiscordAlert("[WARNING] Low Battery (" + currentBatt + "%)! Device: #" + deviceNum + " (Temp: " + currentTemp + "C)");
             }
             handler.postDelayed(this, 10000);
         }
@@ -140,5 +140,8 @@ public class MonitorService extends Service {
         }
     }
 
-    @Override public IBinder onBind(Intent intent) { return null; }
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
 }
