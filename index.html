@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>스마트폰 실시간 관제소</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: #0b0f19; color: #ffffff; padding: 15px; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #1e293b; padding-bottom: 12px; flex-wrap: wrap; gap: 10px; }
+    h1 { font-size: 1.2rem; font-weight: bold; }
+    .controls { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; background: #1e293b; padding: 5px 10px; border-radius: 8px; }
+    .controls input { width: 55px; background: #0b0f19; border: 1px solid #475569; color: #fff; padding: 3px 6px; border-radius: 4px; text-align: center; font-size: 0.9rem; font-weight: bold; }
+    .status-summary { display: flex; gap: 8px; font-size: 0.8rem; flex-wrap: wrap; }
+    .status-badge { padding: 5px 10px; border-radius: 8px; font-weight: bold; }
+    .badge-online { background: #15803d; color: #ffffff; }
+    .badge-offline { background: #b91c1c; color: #ffffff; }
+    .badge-unregistered { background: #475569; color: #cbd5e1; }
+    .unreg-alert-box { background: #1e293b; border-left: 4px solid #94a3b8; padding: 8px 12px; margin-bottom: 15px; border-radius: 4px; font-size: 0.8rem; line-height: 1.4; color: #cbd5e1; word-break: break-all; }
+    .unreg-list-text { color: #f87171; font-weight: bold; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 10px; }
+    .card { border-radius: 10px; padding: 10px 6px; text-align: center; transition: all 0.3s ease; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); border: 2px solid transparent; }
+    .card.online { background: linear-gradient(145deg, #15803d, #166534); border-color: #22c55e; color: #ffffff; }
+    .card.offline { background: linear-gradient(145deg, #b91c1c, #991b1b); border-color: #ef4444; color: #fee2e2; }
+    .card.unregistered { background: #1e293b; border-color: #475569; border-style: dashed; opacity: 0.5; }
+    .card-title { font-size: 1.1rem; font-weight: 900; margin-bottom: 6px; }
+    .card.online .card-title { color: #f0fdf4; border-bottom: 1px solid rgba(255, 255, 255, 0.2); padding-bottom: 3px; }
+    .card.offline .card-title { color: #fef2f2; border-bottom: 1px solid rgba(255, 255, 255, 0.2); padding-bottom: 3px; }
+    .card.unregistered .card-title { color: #94a3b8; border-bottom: 1px dashed rgba(255, 255, 255, 0.1); padding-bottom: 3px; }
+    .stat { font-size: 0.75rem; margin-bottom: 3px; display: flex; justify-content: space-between; font-weight: 600; }
+    .stat-val { font-weight: 800; }
+    .stat-val.warn { color: #fef08a; }
+    .uptime { font-size: 0.68rem; opacity: 0.85; margin-top: 6px; }
+    .status-msg { font-size: 0.85rem; font-weight: bold; margin: 12px 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📱 폰보드 실시간 관제</h1>
+    <div class="controls">
+      <span>관리수:</span>
+      <input type="number" id="targetCount" value="52" min="1" max="500">
+      <span>대</span>
+    </div>
+    <div class="status-summary">
+      <span class="status-badge badge-online" id="count-online">정상: 0</span>
+      <span class="status-badge badge-offline" id="count-offline">끊김: 0</span>
+      <span class="status-badge badge-unregistered" id="count-unreg">미등록: 0</span>
+    </div>
+  </header>
+
+  <div class="unreg-alert-box" id="unreg-box">확인 중...</div>
+  <div class="grid" id="grid"></div>
+
+  <script>
+    const FIREBASE_URL = "https://phonewebmonitor-7afcb-default-rtdb.europe-west1.firebasedatabase.app/devices.json";
+    const grid = document.getElementById("grid");
+    const countOnline = document.getElementById("count-online");
+    const countOffline = document.getElementById("count-offline");
+    const countUnreg = document.getElementById("count-unreg");
+    const unregBox = document.getElementById("unreg-box");
+    const targetCountInput = document.getElementById("targetCount");
+
+    targetCountInput.addEventListener("input", fetchStatus);
+
+    async function fetchStatus() {
+      try {
+        const res = await fetch(FIREBASE_URL);
+        const data = await res.json() || {};
+        render(data);
+      } catch (e) {
+        console.error("데이터 수신 오류:", e);
+      }
+    }
+
+    function formatNumber(n) { return n < 10 ? "0" + n : "" + n; }
+
+    function render(data) {
+      const targetCount = parseInt(targetCountInput.value, 10) || 52;
+      const existingKeys = new Set(Object.keys(data));
+      const allNumbersSet = new Set();
+      for (let i = 1; i <= targetCount; i++) allNumbersSet.add(formatNumber(i));
+      existingKeys.forEach(k => allNumbersSet.add(k));
+
+      const sortedKeys = Array.from(allNumbersSet).sort((a, b) => {
+        const numA = parseInt(a, 10), numB = parseInt(b, 10);
+        if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+        return a.localeCompare(b);
+      });
+
+      grid.innerHTML = "";
+      const now = Date.now();
+      let onlineCount = 0, offlineCount = 0, unregisteredList = [];
+
+      sortedKeys.forEach(num => {
+        const altNum = "" + parseInt(num, 10);
+        const dev = data[num] || data[altNum];
+        const card = document.createElement("div");
+        card.className = "card";
+
+        if (!dev) {
+          unregisteredList.push(num);
+          card.classList.add("unregistered");
+          card.innerHTML = `<div class="card-title">#${num}</div><div class="status-msg" style="color:#94a3b8;">미등록</div><div class="uptime">-</div>`;
+        } else {
+          const isOffline = !dev.updatedAt || (now - dev.updatedAt > 60000);
+          if (isOffline) {
+            offlineCount++;
+            card.classList.add("offline");
+            card.innerHTML = `<div class="card-title">#${num}</div><div class="status-msg">끊김</div><div class="uptime">${dev.uptime || '-'}</div>`;
+          } else {
+            onlineCount++;
+            card.classList.add("online");
+            card.innerHTML = `
+              <div class="card-title">#${num}</div>
+              <div class="stat"><span>온도</span><span class="stat-val ${dev.temp >= 39 ? 'warn' : ''}">${dev.temp}℃</span></div>
+              <div class="stat"><span>배터리</span><span class="stat-val ${dev.batt < 50 ? 'warn' : ''}">${dev.batt}%</span></div>
+              <div class="stat"><span>충전</span><span class="stat-val ${!dev.plugged ? 'warn' : ''}">${dev.plugged ? 'ON' : 'OFF'}</span></div>
+              <div class="uptime">${dev.uptime || '-'}</div>
+            `;
+          }
+        }
+        grid.appendChild(card);
+      });
+
+      countOnline.innerText = `정상: ${onlineCount}`;
+      countOffline.innerText = `끊김: ${offlineCount}`;
+      countUnreg.innerText = `미등록: ${unregisteredList.length}`;
+
+      if (unregisteredList.length > 0) {
+        unregBox.innerHTML = `📌 <strong>미등록:</strong> <span class="unreg-list-text">${unregisteredList.map(n => '#' + n).join(', ')}</span>`;
+      } else {
+        unregBox.innerHTML = `✅ <strong>전체 기기 등록 완료</strong>`;
+      }
+    }
+
+    fetchStatus();
+    setInterval(fetchStatus, 3000);
+  </script>
+</body>
+</html>
