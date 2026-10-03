@@ -1,4 +1,5 @@
-﻿package com.monitor.phoneguard;
+package com.monitor.phoneguard;
+
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -27,6 +28,7 @@ public class MonitorService extends Service {
     private float currentTemp = 0.0f;
     private int currentBatt = 100;
     private boolean isUsbPlugged = true;
+
     private long lastDangerAlertTime = 0;
     private long lastBattAlertTime = 0;
     private long lastDisconnectAlertTime = 0;
@@ -47,7 +49,7 @@ public class MonitorService extends Service {
                 long now = System.currentTimeMillis();
                 if (now - lastDisconnectAlertTime > 180000) {
                     lastDisconnectAlertTime = now;
-                    sendDiscordAlert("?뵆 **[?곕낫??USB 遺꾨━/?몄떇 ?댁젣 媛먯?]**\n??湲곌린: **" + deviceNum + "踰???*\n???곹깭: ?꾩썝 怨듦툒 諛?USB ?곌껐 以묐떒!");
+                    sendDiscordAlert("\uD83D\uDD0C **[\uD3F0\uBCF4\uB4DC USB \uBD84\uB9AC/\uC778\uC2DD \uD574\uC81C \uAC10\uC9C0]**\n\u2022 \uAE30\uAE30: **" + deviceNum + "\uBC88 \uD3F0**\n\u2022 \uC0C1\uD0DC: \uC804\uC6D0 \uACF5\uAE09 \uBC0F USB \uC5F0\uACB0 \uC911\uB2E8!");
                 }
             }
             isUsbPlugged = currentlyPlugged;
@@ -74,18 +76,18 @@ public class MonitorService extends Service {
             long uptimeSeconds = SystemClock.elapsedRealtime() / 1000;
             int hours = (int) (uptimeSeconds / 3600);
             int mins = (int) ((uptimeSeconds % 3600) / 60);
-            String uptimeStr = hours + "?쒓컙 " + mins + "遺?;
+            String uptimeStr = hours + "\uC2DC\uAC04 " + mins + "\uBD84";
 
             sendDataToFirebase(deviceNum, currentTemp, currentBatt, uptimeStr, isUsbPlugged);
 
             long now = System.currentTimeMillis();
             if (currentTemp >= 39.0f && (now - lastDangerAlertTime > 300000)) {
                 lastDangerAlertTime = now;
-                sendDiscordAlert("?슚 **[?ㅻ쭏?명룿 怨좎삩 ?꾪뿕] " + deviceNum + "踰?湲곌린**\n???꾩옱 ?⑤룄: **" + currentTemp + "??*\n??諛고꽣由? **" + currentBatt + "%**\n??媛?숈떆媛? **" + uptimeStr + "**");
+                sendDiscordAlert("\uD83D\uDEA8 **[\uC2A4\uB9C8\uD2B8\uD3F0 \uACE0\uC628 \uC704\uD5D8] " + deviceNum + "\uBC88 \uAE30\uAE30**\n\u2022 \uD604\uC7AC \uC628\uB3C4: **" + currentTemp + "\u2103**\n\u2022 \uBC30\uD130\uB9AC: **" + currentBatt + "%**\n\u2022 \uAC00\uB3D9\uC2DC\uAC04: **" + uptimeStr + "**");
             }
             if (currentBatt < 50 && (now - lastBattAlertTime > 600000)) {
                 lastBattAlertTime = now;
-                sendDiscordAlert("?か **[諛고꽣由????寃쎄퀬 (50% 誘몃쭔)] " + deviceNum + "踰?湲곌린**\n???붿뿬 諛고꽣由? **" + currentBatt + "%**\n???꾩옱 ?⑤룄: " + currentTemp + "??);
+                sendDiscordAlert("\uD83E\uDEAB **[\uBC30\uD130\uB9AC \uC800\uD558 \uACBD\uACE0 (50% \uBBF8\uB man)] " + deviceNum + "\uBC88 \uAE30\uAE30**\n\u2022 \uC794\uC5EC \uBC30\uD130\uB9AC: **" + currentBatt + "%**\n\u2022 \uD604\uC7AC \uC628\uB3C4: " + currentTemp + "\u2103");
             }
             handler.postDelayed(this, 10000);
         }
@@ -130,8 +132,8 @@ public class MonitorService extends Service {
             NotificationManager manager = getSystemService(NotificationManager.class);
             if (manager != null) manager.createNotificationChannel(channel);
             Notification notification = new Notification.Builder(this, "monitor_ch")
-                .setContentTitle(deviceNum + "踰?愿???ㅽ뻾 以?)
-                .setContentText("?ㅼ떆媛??대씪?곕뱶 ?꾩넚 以?)
+                .setContentTitle(deviceNum + " Phone Monitoring")
+                .setContentText("Active")
                 .setSmallIcon(android.R.drawable.stat_notify_sync)
                 .build();
             startForeground(1001, notification);
